@@ -120,15 +120,14 @@ Point Curve::useHermiteCurve(const unsigned int nextPoint, const float time)
 	Point newPosition;
 	// Calculate position at t = time on Hermite curve
 	float normalTime = (time - controlPoints[nextPoint - 1].time) / (controlPoints[nextPoint].time - controlPoints[nextPoint - 1].time);
-	float tSquared = normalTime * normalTime;
-	float tCubed = tSquared * normalTime;
 	CurvePoint p0 = controlPoints[nextPoint - 1];
 	CurvePoint p1 = controlPoints[nextPoint];
+	float tSquared = normalTime * normalTime;
+	float tCubed = tSquared * normalTime;
 	newPosition = (2.0f * tCubed - 3.0f * tSquared + 1.0f) * p0.position + 
 		(tCubed - 2.0f * tSquared + normalTime) * p0.tangent +
 		(-2.0f * tCubed + 3.0f * tSquared) * p1.position + 
 		(tCubed - tSquared) * p1.tangent;
-	
 	// Return result
 	return newPosition;
 }
@@ -139,7 +138,26 @@ Point Curve::useCatmullCurve(const unsigned int nextPoint, const float time)
 	Point newPosition;
 	// Calculate position at t = time on Catmull-Rom curve
 	float normalTime = (time - controlPoints[nextPoint - 1].time) / (controlPoints[nextPoint].time - controlPoints[nextPoint - 1].time);
-	if (nextPoint > 1 && nextPoint < controlPoints.size() - 2) {
+	Point p0 = controlPoints[nextPoint - 1].position;
+	Point p1 = controlPoints[nextPoint].position;
+	Vector m0, m1;
+	if (nextPoint > 1) {
+		m0 = 0.5f * (p1 - controlPoints[nextPoint - 2].position);
+	} else {
+		m0 = p1 - p0;
+	}
+	if (nextPoint < controlPoints.size() - 2) {
+		m1 = 0.5f * (controlPoints[nextPoint + 1].position - p0);
+	} else {
+		m1 = p1 - p0;
+	}
+	float tSquared = normalTime * normalTime;
+	float tCubed = tSquared * normalTime;
+	newPosition = (2.0f * tCubed - 3.0f * tSquared + 1.0f) * p0 + 
+		(tCubed - 2.0f * tSquared + normalTime) * m0 +
+		(-2.0f * tCubed + 3.0f * tSquared) * p1 + 
+		(tCubed - tSquared) * m1;
+	/*if (nextPoint > 1 && nextPoint < controlPoints.size() - 2) {
 		Point p0 = controlPoints[nextPoint - 2].position;
 		Point p1 = controlPoints[nextPoint - 1].position;
 		Point p2 = controlPoints[nextPoint].position;
@@ -161,7 +179,7 @@ Point Curve::useCatmullCurve(const unsigned int nextPoint, const float time)
 	} else {
 		// Use the Hermite Curve formula if right after the first control point or right before the last control point.
 		newPosition = useHermiteCurve(nextPoint, time);
-	}
+	}*/
 	
 	// Return result
 	return newPosition;
