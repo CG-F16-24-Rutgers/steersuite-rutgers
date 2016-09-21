@@ -145,14 +145,34 @@ Point Curve::useHermiteCurve(const unsigned int nextPoint, const float time)
 	Point newPosition;
 	float normalTime, intervalTime;
 
-	//================DELETE THIS PART AND THEN START CODING===================
-	static bool flag = false;
-	if (!flag)
-	{
-		std::cerr << "ERROR>>>>Member function useHermiteCurve is not implemented!" << std::endl;
-		flag = true;
+	if (!findTimeInterval(nextPoint, time)) {
+		return newPosition;
 	}
-	//=========================================================================
+	normalTime = time;
+	intervalTime = findTimeInterval(nextPoint, normalTime);
+
+	float h1 = 2 * normalTime * normalTime * normalTime - 3 * normalTime * normalTime + 1;
+	float h2 = -2 * normalTime * normalTime * normalTime + 3 * normalTime * normalTime;
+	float h3 = normalTime * normalTime * normalTime - 2 * normalTime * normalTime + normalTime;
+	float h4 = normalTime * normalTime * normalTime - normalTime * normalTime;
+
+	//find x
+	newPosition.x = h1 * controlPoints[normalTime].position.x +
+		h2 * controlPoints[intervalTime].position.x +
+		h3 * controlPoints[normalTime].tangent.x +
+		h4 * controlPoints[intervalTime].tangent.x;
+
+	//find y
+	newPosition.y = h1 * controlPoints[normalTime].position.y +
+		h2 * controlPoints[intervalTime].position.y +
+		h3 * controlPoints[normalTime].tangent.y +
+		h4 * controlPoints[intervalTime].tangent.y;
+
+	//find z
+	newPosition.z = h1 * controlPoints[normalTime].position.z +
+		h2 * controlPoints[intervalTime].position.z +
+		h3 * controlPoints[normalTime].tangent.z +
+		h4 * controlPoints[intervalTime].tangent.z;
 
 	// Calculate position at t = time on Hermite curve
 
