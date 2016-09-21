@@ -48,20 +48,12 @@ void Curve::addControlPoints(const std::vector<CurvePoint>& inputPoints)
 void Curve::drawCurve(Color curveColor, float curveThickness, int window)
 {
 #ifdef ENABLE_GUI
-
-	//================DELETE THIS PART AND THEN START CODING===================
-	static bool flag = false;
-	if (!flag)
-	{
-		std::cerr << "ERROR>>>>Member function drawCurve is not implemented!" << std::endl;
-		flag = true;
-	}
-	//=========================================================================
-
 	// Robustness: make sure there is at least two control point: start and end points
 	// Move on the curve from t=0 to t=finalPoint, using window as step size, and linearly interpolate the curve points
 	// Note that you must draw the whole curve at each frame, that means connecting line segments between each two points on the curve
-	
+	for (int i = 1; i < controlPoints.size(); i++) {
+		Util::DrawLib::drawLineAlpha(controlPoints[i - 1].position, controlPoints[i].position, Color(0.0f, 0.0f, 1.0f), 1.0f);
+	}
 	return;
 #endif
 }
@@ -136,37 +128,6 @@ Point Curve::useHermiteCurve(const unsigned int nextPoint, const float time)
 		(tCubed - 2.0f * tSquared + normalTime) * p0.tangent +
 		(-2.0f * tCubed + 3.0f * tSquared) * p1.position + 
 		(tCubed - tSquared) * p1.tangent;
-	
-	/*float normalTime, intervalTime;
-
-	if (!findTimeInterval(nextPoint, time)) {
-		return newPosition;
-	}
-	normalTime = time;
-	intervalTime = findTimeInterval(nextPoint, normalTime);
-
-	float h1 = 2 * normalTime * normalTime * normalTime - 3 * normalTime * normalTime + 1;
-	float h2 = -2 * normalTime * normalTime * normalTime + 3 * normalTime * normalTime;
-	float h3 = normalTime * normalTime * normalTime - 2 * normalTime * normalTime + normalTime;
-	float h4 = normalTime * normalTime * normalTime - normalTime * normalTime;
-
-	//find x
-	newPosition.x = h1 * controlPoints[normalTime].position.x +
-		h2 * controlPoints[intervalTime].position.x +
-		h3 * controlPoints[normalTime].tangent.x +
-		h4 * controlPoints[intervalTime].tangent.x;
-
-	//find y
-	newPosition.y = h1 * controlPoints[normalTime].position.y +
-		h2 * controlPoints[intervalTime].position.y +
-		h3 * controlPoints[normalTime].tangent.y +
-		h4 * controlPoints[intervalTime].tangent.y;
-
-	//find z
-	newPosition.z = h1 * controlPoints[normalTime].position.z +
-		h2 * controlPoints[intervalTime].position.z +
-		h3 * controlPoints[normalTime].tangent.z +
-		h4 * controlPoints[intervalTime].tangent.z;*/
 	
 	// Return result
 	return newPosition;
