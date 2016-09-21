@@ -69,7 +69,7 @@ void Curve::drawCurve(Color curveColor, float curveThickness, int window)
 // Sort controlPoints vector in ascending order: min-first
 void Curve::sortControlPoints()
 {
-	sort(controlPoints, controlPoints.end(), curvePointCmp);
+	sort(controlPoints.begin(), controlPoints.end(), curvePointCmp);
 	return;
 }
 
@@ -106,17 +106,7 @@ bool Curve::calculatePoint(Point& outputPoint, float time)
 // Check Roboustness
 bool Curve::checkRobust()
 {
-	//================DELETE THIS PART AND THEN START CODING===================
-	static bool flag = false;
-	if (!flag)
-	{
-		std::cerr << "ERROR>>>>Member function checkRobust is not implemented!" << std::endl;
-		flag = true;
-	}
-	//=========================================================================
-
-
-	return true;
+	return controlPoints.size() >= 2;
 }
 
 // Find the current time interval (i.e. index of the next control point to follow according to current time)
