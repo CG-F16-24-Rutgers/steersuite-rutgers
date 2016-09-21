@@ -183,10 +183,20 @@ Point Curve::useCatmullCurve(const unsigned int nextPoint, const float time)
 		Point p1 = controlPoints[nextPoint - 1].position;
 		Point p2 = controlPoints[nextPoint].position;
 		Point p3 = controlPoints[nextPoint + 1].position;
-		newPosition = 0.5f * ((2.0f * p1) + 
-			(-p0 + p2) * normalTime + 
-			(2.0f * p0 - 5.0f * p1 + 4.0f * p2 - p3) * pow(normalTime, 2.0f) + 
-			(-p0 + 3.0f * p1 - 3.0f * p2 + p3) * pow(normalTime, 3.0f));
+		float tSquared = normalTime * normalTime;
+		float tCubed = tSquared * normalTime;
+		newPosition.x = 0.5f * ((2.0f * p1.x) + 
+			((p2.x - p0.x) * normalTime) + 
+			((2.0f * p0.x + 4.0f * p2.x - 5.0f * p1.x - p3.x) * tSquared) + 
+			((3.0f * p1.x + p3.x - 3.0f * p2.x - p0.x) * tCubed));
+		newPosition.y = 0.5f * ((2.0f * p1.y) + 
+			((p2.y - p0.y) * normalTime) + 
+			((2.0f * p0.y + 4.0f * p2.y - 5.0f * p1.y - p3.y) * tSquared) + 
+			((3.0f * p1.y + p3.y - 3.0f * p2.y - p0.y) * tCubed));
+		newPosition.z = 0.5f * ((2.0f * p1.z) + 
+			((p2.z - p0.z) * normalTime) + 
+			((2.0f * p0.z + 4.0f * p2.z - 5.0f * p1.z - p3.z) * tSquared) + 
+			((3.0f * p1.z + p3.z - 3.0f * p2.z - p0.z) * tCubed));
 	} else {
 		// Use the Hermite Curve formula if right after the first control point or right before the last control point.
 		newPosition = useHermiteCurve(nextPoint, time);
