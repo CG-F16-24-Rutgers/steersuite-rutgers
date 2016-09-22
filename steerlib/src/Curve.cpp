@@ -51,8 +51,34 @@ void Curve::drawCurve(Color curveColor, float curveThickness, int window)
 	// Robustness: make sure there is at least two control point: start and end points
 	// Move on the curve from t=0 to t=finalPoint, using window as step size, and linearly interpolate the curve points
 	// Note that you must draw the whole curve at each frame, that means connecting line segments between each two points on the curve
+	Color c;
+	if (type == hermiteCurve) {
+		c = Color(0.0f, 1.0f, 0.0f);
+	} else if (type == catmullCurve) {
+		c = Color(0.0f, 0.0f, 1.0f);
+	}
+	Point p0, p1, p2, p3, p4;
+	float timeGap;
 	for (int i = 1; i < controlPoints.size(); i++) {
-		Util::DrawLib::drawLineAlpha(controlPoints[i - 1].position, controlPoints[i].position, Color(0.0f, 0.0f, 1.0f), 1.0f);
+		timeGap = (controlPoints[i].time - controlPoints[i - 1].time);
+		if (type == hermiteCurve) {
+			p0 = useHermiteCurve(i, controlPoints[i - 1].time);
+			p1 = useHermiteCurve(i, controlPoints[i - 1].time + timeGap * 0.25f);
+			p2 = useHermiteCurve(i, controlPoints[i - 1].time + timeGap * 0.5f);
+			p3 = useHermiteCurve(i, controlPoints[i - 1].time + timeGap * 0.75f);
+			p4 = useHermiteCurve(i, controlPoints[i].time);
+		} else if (type == catmullCurve) {
+			p0 = useCatmullCurve(i, controlPoints[i - 1].time);
+			p1 = useCatmullCurve(i, controlPoints[i - 1].time + timeGap * 0.25f);
+			p2 = useCatmullCurve(i, controlPoints[i - 1].time + timeGap * 0.5f);
+			p3 = useCatmullCurve(i, controlPoints[i - 1].time + timeGap * 0.75f);
+			p4 = useCatmullCurve(i, controlPoints[i].time);
+		}
+		Util::DrawLib::drawLineAlpha(p0, p1, c, 1.0f);
+		Util::DrawLib::drawLineAlpha(p1, p2, c, 1.0f);
+		Util::DrawLib::drawLineAlpha(p2, p3, c, 1.0f);
+		Util::DrawLib::drawLineAlpha(p3, p4, c, 1.0f);
+		//Util::DrawLib::drawLineAlpha(controlPoints[i - 1].position, controlPoints[i].position, Color(0.0f, 0.0f, 1.0f), 1.0f);
 	}
 	return;
 #endif
