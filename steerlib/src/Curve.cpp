@@ -78,7 +78,6 @@ void Curve::drawCurve(Color curveColor, float curveThickness, int window)
 		Util::DrawLib::drawLineAlpha(p1, p2, c, 1.0f);
 		Util::DrawLib::drawLineAlpha(p2, p3, c, 1.0f);
 		Util::DrawLib::drawLineAlpha(p3, p4, c, 1.0f);
-		//Util::DrawLib::drawLineAlpha(controlPoints[i - 1].position, controlPoints[i].position, Color(0.0f, 0.0f, 1.0f), 1.0f);
 	}
 	return;
 #endif
@@ -151,9 +150,9 @@ Point Curve::useHermiteCurve(const unsigned int nextPoint, const float time)
 	float tSquared = normalTime * normalTime;
 	float tCubed = tSquared * normalTime;
 	newPosition = (2.0f * tCubed - 3.0f * tSquared + 1.0f) * p0.position + 
-		(tCubed - 2.0f * tSquared + normalTime) * p0.tangent * 5.0f +
+		(tCubed - 2.0f * tSquared + normalTime) * p0.tangent +
 		(-2.0f * tCubed + 3.0f * tSquared) * p1.position + 
-		(tCubed - tSquared) * p1.tangent * 5.0f;
+		(tCubed - tSquared) * p1.tangent;
 	// Return result
 	return newPosition;
 }
