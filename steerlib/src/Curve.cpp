@@ -125,9 +125,9 @@ Point Curve::useHermiteCurve(const unsigned int nextPoint, const float time)
 	float tSquared = normalTime * normalTime;
 	float tCubed = tSquared * normalTime;
 	newPosition = (2.0f * tCubed - 3.0f * tSquared + 1.0f) * p0.position + 
-		(tCubed - 2.0f * tSquared + normalTime) * p0.tangent +
+		(tCubed - 2.0f * tSquared + normalTime) * p0.tangent * 5.0f +
 		(-2.0f * tCubed + 3.0f * tSquared) * p1.position + 
-		(tCubed - tSquared) * p1.tangent;
+		(tCubed - tSquared) * p1.tangent * 5.0f;
 	// Return result
 	return newPosition;
 }
@@ -157,29 +157,6 @@ Point Curve::useCatmullCurve(const unsigned int nextPoint, const float time)
 		(tCubed - 2.0f * tSquared + normalTime) * m0 +
 		(-2.0f * tCubed + 3.0f * tSquared) * p1 + 
 		(tCubed - tSquared) * m1;
-	/*if (nextPoint > 1 && nextPoint < controlPoints.size() - 2) {
-		Point p0 = controlPoints[nextPoint - 2].position;
-		Point p1 = controlPoints[nextPoint - 1].position;
-		Point p2 = controlPoints[nextPoint].position;
-		Point p3 = controlPoints[nextPoint + 1].position;
-		float tSquared = normalTime * normalTime;
-		float tCubed = tSquared * normalTime;
-		newPosition.x = 0.5f * ((2.0f * p1.x) + 
-			((p2.x - p0.x) * normalTime) + 
-			((2.0f * p0.x + 4.0f * p2.x - 5.0f * p1.x - p3.x) * tSquared) + 
-			((3.0f * p1.x + p3.x - 3.0f * p2.x - p0.x) * tCubed));
-		newPosition.y = 0.5f * ((2.0f * p1.y) + 
-			((p2.y - p0.y) * normalTime) + 
-			((2.0f * p0.y + 4.0f * p2.y - 5.0f * p1.y - p3.y) * tSquared) + 
-			((3.0f * p1.y + p3.y - 3.0f * p2.y - p0.y) * tCubed));
-		newPosition.z = 0.5f * ((2.0f * p1.z) + 
-			((p2.z - p0.z) * normalTime) + 
-			((2.0f * p0.z + 4.0f * p2.z - 5.0f * p1.z - p3.z) * tSquared) + 
-			((3.0f * p1.z + p3.z - 3.0f * p2.z - p0.z) * tCubed));
-	} else {
-		// Use the Hermite Curve formula if right after the first control point or right before the last control point.
-		newPosition = useHermiteCurve(nextPoint, time);
-	}*/
 	
 	// Return result
 	return newPosition;
