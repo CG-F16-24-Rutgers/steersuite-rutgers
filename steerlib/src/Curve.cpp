@@ -149,10 +149,14 @@ Point Curve::useHermiteCurve(const unsigned int nextPoint, const float time)
 	CurvePoint p1 = controlPoints[nextPoint];
 	float tSquared = normalTime * normalTime;
 	float tCubed = tSquared * normalTime;
-	newPosition = (2.0f * tCubed - 3.0f * tSquared + 1.0f) * p0.position + 
-		(tCubed - 2.0f * tSquared + normalTime) * p0.tangent +
-		(-2.0f * tCubed + 3.0f * tSquared) * p1.position + 
-		(tCubed - tSquared) * p1.tangent;
+	float h00 = (2.0f * tCubed) - (3.0f * tSquared + 1.0f);
+	float h10 = tCubed - (2.0f * tSquared) + normalTime;
+	float h01 = (-2.0f * tCubed) + (3.0f * tSquared);
+	float h11 = tCubed - tSquared;
+	newPosition = h00 * p0.position +
+		h10 * (p1.time - p0.time) * p0.tangent +
+		h01 * p1.position +
+		h11 * (p1.time - p0.time) * p1.tangent;
 	// Return result
 	return newPosition;
 }
@@ -162,6 +166,11 @@ Point Curve::useCatmullCurve(const unsigned int nextPoint, const float time)
 {
 	Point newPosition;
 	// Calculate position at t = time on Catmull-Rom curve
+
+	if (nextPoint == 0) {
+		
+	}
+
 	float normalTime = (time - controlPoints[nextPoint - 1].time) / (controlPoints[nextPoint].time - controlPoints[nextPoint - 1].time);
 	Point p0 = controlPoints[nextPoint - 1].position;
 	Point p1 = controlPoints[nextPoint].position;
@@ -182,7 +191,7 @@ Point Curve::useCatmullCurve(const unsigned int nextPoint, const float time)
 		(tCubed - 2.0f * tSquared + normalTime) * m0 +
 		(-2.0f * tCubed + 3.0f * tSquared) * p1 + 
 		(tCubed - tSquared) * m1;
-	
+
 	// Return result
 	return newPosition;
 }
