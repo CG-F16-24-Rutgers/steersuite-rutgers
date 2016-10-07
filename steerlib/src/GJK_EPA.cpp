@@ -104,20 +104,21 @@ Util::Vector findClosestEdge(std::vector<Util::Vector>& s, float& d, int& index)
 }
 
 void EPA(float& return_penetration_depth, Util::Vector& return_penetration_vector, const std::vector<Util::Vector>& _shapeA, const std::vector<Util::Vector>& _shapeB, std::vector<Util::Vector> s) {
+	float edge_distance;
+	int index;
 	while (true) {
-		float edge_distance;
-		int index;
 		Util::Vector edge_normal = findClosestEdge(s, edge_distance, index);
 
 		Util::Vector p = getSupport(_shapeA, edge_normal) - getSupport(_shapeB, -1 * edge_normal);
 
 		float d = Util::dot(p, edge_normal);
-		if (d - edge_distance < 0.0001) {
+		if (d - edge_distance < 3.0f) {
 			return_penetration_vector = edge_normal;
 			return_penetration_depth = d;
-		}
-		else
+			return;
+		} else {
 			s.insert(s.begin() + index, p);
+		}
 	}
 }
 
