@@ -112,11 +112,11 @@ void EPA(float& return_penetration_depth, Util::Vector& return_penetration_vecto
 		Util::Vector p = getSupport(_shapeA, edge_normal) - getSupport(_shapeB, -1 * edge_normal);
 
 		float d = Util::dot(p, edge_normal);
-		if (d - edge_distance < 0.0001) {
+		if(edge_distance < d) {
 			return_penetration_vector = edge_normal;
 			return_penetration_depth = d;
-		}
-		else
+			return;
+		} else
 			s.insert(s.begin() + index, p);
 	}
 }
