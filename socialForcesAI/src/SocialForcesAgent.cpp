@@ -28,6 +28,8 @@ using namespace SteerLib;
 
 SocialForcesAgent::SocialForcesAgent()
 {
+	state = PURSUE_EVADE;
+
 	_SocialForcesParams.sf_acceleration = sf_acceleration;
 	_SocialForcesParams.sf_personal_space_threshold = sf_personal_space_threshold;
 	_SocialForcesParams.sf_agent_repulsion_importance = sf_agent_repulsion_importance;
@@ -108,13 +110,36 @@ void SocialForcesAgent::reset(const SteerLib::AgentInitialConditions & initialCo
 	_radius = initialConditions.radius;
 	_velocity = initialConditions.speed * _forward;
 	// std::cout << "inital colour of agent " << initialConditions.color << std::endl;
-	if ( initialConditions.colorSet == true )
-	{
-		this->_color = initialConditions.color;
-	}
-	else
-	{
-		this->_color = Util::gBlue;
+	
+	type = NONE;
+	MTRand rng;
+	switch (state) {
+	case PURSUE_EVADE:
+		rng.seed();
+		switch ((int) rng.randExc(3.0)) {
+		case 0:
+			type = PURSUE;
+			this->_color = Util::gGreen;
+			break;
+		case 1:
+			type = EVADE;
+			this->_color = Util::gRed;
+			break;
+		default:
+			this->_color = Util::gBlue;
+			break;
+		}
+		break;
+	default:
+		if ( initialConditions.colorSet == true )
+		{
+			this->_color = initialConditions.color;
+		}
+		else
+		{
+			this->_color = Util::gBlue;
+		}
+		break;
 	}
 
 	// compute the "new" bounding box of the agent
@@ -762,9 +787,15 @@ void SocialForcesAgent::computeNeighbors()
 	}
 }*/
 
-
 void SocialForcesAgent::updateAI(float timeStamp, float dt, unsigned int frameNumber)
 {
+	switch (state) {
+	case PURSUE_EVADE:
+		updatePursueEvade();
+		break;
+	default:
+		break;
+	}
 	// std::cout << "_SocialForcesParams.rvo_max_speed " << _SocialForcesParams._SocialForcesParams.rvo_max_speed << std::endl;
 	Util::AutomaticFunctionProfiler profileThisFunction( &SocialForcesGlobals::gPhaseProfilers->aiProfiler );
 	if (!enabled())
@@ -883,7 +914,6 @@ void SocialForcesAgent::updateAI(float timeStamp, float dt, unsigned int frameNu
 
 }
 
-
 void SocialForcesAgent::draw()
 {
 #ifdef ENABLE_GUI
@@ -985,3 +1015,42 @@ void SocialForcesAgent::draw()
 #endif
 }
 
+AIType SocialForcesAgent::getType() {
+	return type;
+}
+
+void SocialForcesAgent::updatePursueEvade() {
+	std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors;
+		getSimulationEngine()->getSpatialDatabase()->getItemsInRange(_neighbors,
+				_position.x-(this->_radius + _SocialForcesParams.sf_query_radius),
+				_position.x+(this->_radius + _SocialForcesParams.sf_query_radius),
+				_position.z-(this->_radius + _SocialForcesParams.sf_query_radius),
+				_position.z+(this->_radius + _SocialForcesParams.sf_query_radius),
+				dynamic_cast<SteerLib::SpatialDatabaseItemPtr>(this));
+	SteerLib::AgentInterface * tmp_agent;
+	
+	for (std::set<SteerLib::SpatialDatabaseItemPtr>::iterator neighbour = _neighbors.begin();  neighbour != _neighbors.end();  neighbour++)
+	// for (int a =0; a < tmp_agents.size(); a++)
+	{
+		if ( (*neighbour)->isAgent() )
+		{
+			tmp_agent = dynamic_cast<SteerLib::AgentInterface *>(*neighbour);
+		}
+		else
+		{
+			continue;
+		}
+		
+		SteerLib::AgentGoalInfo goal;
+		switch (((SocialForcesAgent*) tmp_agent)->getType()) {
+		case PURSUE:
+			_velocity += Util::Vector(tmp_agent->position().x, tmp_agent->position().y, tmp_agent->position().z);
+			break;
+		case EVADE:
+			_velocity -= Util::Vector(tmp_agent->position().x, tmp_agent->position().y, tmp_agent->position().z);
+			break;
+		default:
+			break;
+		}
+	}
+}
