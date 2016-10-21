@@ -88,10 +88,11 @@
       <direction> <random>true</random> </direction>
       <radius>0.5</radius>
       <speed>0</speed>
-	  <name>hunter</name>
+	  <name>pursuer</name>
     </initialConditions>
     <goalSequence>
-      <seekStaticTarget>
+      <seekDynamicTarget>
+		<targetName><name>evader</name></targetName>
         <desiredSpeed>1.3</desiredSpeed>
         <timeDuration>1000.0</timeDuration>
       </seekDynamicTarget>
@@ -113,13 +114,14 @@
       <direction> <random>true</random> </direction>
       <radius>0.5</radius>
       <speed>0</speed>
-	  <name>prey</name>
+	  <name>evader</name>
     </initialConditions>
     <goalSequence>
-      <seekStaticTarget>
+      <fleeDynamicTarget>
+		<targetName><name>pursuer</type></targetName>
         <desiredSpeed>1.3</desiredSpeed>
         <timeDuration>1000.0</timeDuration>
-      </seekStaticTarget>
+      </fleeDynamicTarget>
     </goalSequence>
 
   </agentRegion>

@@ -174,7 +174,9 @@ void SocialForcesAgent::reset(const SteerLib::AgentInitialConditions & initialCo
 	// iterate over the sequence of goals specified by the initial conditions.
 	for (unsigned int i=0; i<initialConditions.goals.size(); i++) {
 		if (initialConditions.goals[i].goalType == SteerLib::GOAL_TYPE_SEEK_STATIC_TARGET ||
-				initialConditions.goals[i].goalType == GOAL_TYPE_AXIS_ALIGNED_BOX_GOAL)
+				initialConditions.goals[i].goalType == GOAL_TYPE_AXIS_ALIGNED_BOX_GOAL ||
+				initialConditions.goals[i].goalType == GOAL_TYPE_FLEE_DYNAMIC_TARGET ||
+				initialConditions.goals[i].goalType == GOAL_TYPE_SEEK_DYNAMIC_TARGET)
 		{
 			if (initialConditions.goals[i].targetIsRandom)
 			{
@@ -1024,16 +1026,8 @@ AIType SocialForcesAgent::getType() {
 	return type;
 }
 
-void SocialForcesAgent::setMoved(bool moved) {
-	moved_forward = moved;
-}
-
-bool SocialForcesAgent::getMoved() {
-	return moved_forward;
-}
-
 Util::Vector SocialForcesAgent::wallFollow(float dt) {
-	Util::Vector result = Util::Vector(0.0f, 0.0f, 0.0f);
+	Util::Vector future_position = Util::Vector(0.0f, 0.0f, 0.0f);
 	std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors;
 	getSimulationEngine()->getSpatialDatabase()->getItemsInRange(_neighbors,
 		_position.x - (this->_radius + _SocialForcesParams.sf_query_radius),
@@ -1050,18 +1044,9 @@ Util::Vector SocialForcesAgent::wallFollow(float dt) {
 			agent = (SocialForcesAgent*) dynamic_cast<SteerLib::AgentInterface *>(*neighbour);
 
 			//Wall follower code here
-			result += Util::Vector(agent->position() + agent->velocity() * dt - position());//step forward
-			Util::rightSideInXZPlane(agent->forward());
-			float left = -1.5708;
-			while (!canMoveForward()) {
-				Util::rotateInXZPlane(agent->forward(), left);
-			}
+			future_position = agent->position() + agent->velocity() * dt - position();
 		}
 	}
-}
-
-bool SocialForcesAgent::canMoveForward() {
-	return true;
 }
 
 Util::Vector SocialForcesAgent::pursueEvade(float dt) {
@@ -1087,14 +1072,14 @@ Util::Vector SocialForcesAgent::pursueEvade(float dt) {
 					/*result += Util::Vector(agent->position().x + agent->velocity().x * dt - position().x, 
 								agent->position().y + agent->velocity().y * dt - position().y, 
 								agent->position().z + agent->velocity().z * dt - position().z);*/
-					result += Util::Vector(agent->position() + agent->velocity() * dt - position());
+					result += agent->position() + agent->velocity() * dt - position();
 				}
 				break;
 			case EVADE:
 				/*result -= Util::Vector(agent->position().x + agent->velocity().x * dt - position().x, 
 							agent->position().y + agent->velocity().y * dt - position().y, 
 							agent->position().z + agent->velocity().z * dt - position().z);*/
-				result -= Util::Vector(agent->position() + agent->velocity() * dt - position());
+				result -= agent->position() + agent->velocity() * dt - position();
 				break;
 			default:
 				break;

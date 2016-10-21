@@ -101,6 +101,7 @@ private:
 	AIState state;
 	AIType type;
 	
+	Util::Vector wallFollow(float dt);
 	Util::Vector pursueEvade(float dt);
 
 	// bool runLongTermPlanning();
