@@ -101,7 +101,7 @@ private:
 	AIState state;
 	AIType type;
 	
-	void updatePursueEvade();
+	Util::Vector pursueEvade(float dt);
 
 	// bool runLongTermPlanning();
 	// bool reachedCurrentWaypoint();
