@@ -1024,6 +1024,46 @@ AIType SocialForcesAgent::getType() {
 	return type;
 }
 
+void SocialForcesAgent::setMoved(bool moved) {
+	moved_forward = moved;
+}
+
+bool SocialForcesAgent::getMoved() {
+	return moved_forward;
+}
+
+Util::Vector SocialForcesAgent::wallFollow(float dt) {
+	Util::Vector result = Util::Vector(0.0f, 0.0f, 0.0f);
+	std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors;
+	getSimulationEngine()->getSpatialDatabase()->getItemsInRange(_neighbors,
+		_position.x - (this->_radius + _SocialForcesParams.sf_query_radius),
+		_position.x + (this->_radius + _SocialForcesParams.sf_query_radius),
+		_position.z - (this->_radius + _SocialForcesParams.sf_query_radius),
+		_position.z + (this->_radius + _SocialForcesParams.sf_query_radius),
+		dynamic_cast<SteerLib::SpatialDatabaseItemPtr>(this));
+	SocialForcesAgent* agent;
+	for (std::set<SteerLib::SpatialDatabaseItemPtr>::iterator neighbour = _neighbors.begin(); neighbour != _neighbors.end(); neighbour++)
+		// for (int a =0; a < tmp_agents.size(); a++)
+	{
+		if ((*neighbour)->isAgent())
+		{
+			agent = (SocialForcesAgent*) dynamic_cast<SteerLib::AgentInterface *>(*neighbour);
+
+			//Wall follower code here
+			result += Util::Vector(agent->position() + agent->velocity() * dt - position());//step forward
+			Util::rightSideInXZPlane(agent->forward());
+			float left = -1.5708;
+			while (!canMoveForward()) {
+				Util::rotateInXZPlane(agent->forward(), left);
+			}
+		}
+	}
+}
+
+bool SocialForcesAgent::canMoveForward() {
+	return true;
+}
+
 Util::Vector SocialForcesAgent::pursueEvade(float dt) {
 	Util::Vector result = Util::Vector(0.0f, 0.0f, 0.0f);
 	std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors;
@@ -1044,15 +1084,17 @@ Util::Vector SocialForcesAgent::pursueEvade(float dt) {
 			switch (agent->getType()) {
 			case PURSUE:
 				if (type != PURSUE) {
-					result += Util::Vector(agent->position().x + agent->velocity().x * dt - position().x, 
+					/*result += Util::Vector(agent->position().x + agent->velocity().x * dt - position().x, 
 								agent->position().y + agent->velocity().y * dt - position().y, 
-								agent->position().z + agent->velocity().z * dt - position().z);
+								agent->position().z + agent->velocity().z * dt - position().z);*/
+					result += Util::Vector(agent->position() + agent->velocity() * dt - position());
 				}
 				break;
 			case EVADE:
-				result -= Util::Vector(agent->position().x + agent->velocity().x * dt - position().x, 
+				/*result -= Util::Vector(agent->position().x + agent->velocity().x * dt - position().x, 
 							agent->position().y + agent->velocity().y * dt - position().y, 
-							agent->position().z + agent->velocity().z * dt - position().z);
+							agent->position().z + agent->velocity().z * dt - position().z);*/
+				result -= Util::Vector(agent->position() + agent->velocity() * dt - position());
 				break;
 			default:
 				break;
