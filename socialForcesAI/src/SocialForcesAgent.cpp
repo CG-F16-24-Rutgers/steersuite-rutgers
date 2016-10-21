@@ -28,7 +28,14 @@ using namespace SteerLib;
 
 SocialForcesAgent::SocialForcesAgent()
 {
-	state = PURSUE_EVADE;
+	state = LEADER_FOLLOW;
+	
+	// Set the first agent loaded to be the leader if Leader Follow mod activated.
+	static bool noLeader = true;
+	if (state == LEADER_FOLLOW && noLeader) {
+		type = LEADER;
+		noLeader = false;
+	}
 
 	_SocialForcesParams.sf_acceleration = sf_acceleration;
 	_SocialForcesParams.sf_personal_space_threshold = sf_personal_space_threshold;
@@ -111,8 +118,6 @@ void SocialForcesAgent::reset(const SteerLib::AgentInitialConditions & initialCo
 	_velocity = initialConditions.speed * _forward;
 	// std::cout << "inital colour of agent " << initialConditions.color << std::endl;
 	
-	type = NONE;
-	MTRand rng;
 	switch (state) {
 	case PURSUE_EVADE:
 		rng.seed();
@@ -126,8 +131,17 @@ void SocialForcesAgent::reset(const SteerLib::AgentInitialConditions & initialCo
 			this->_color = Util::gRed;
 			break;
 		default:
+			type = NONE;
 			this->_color = Util::gBlue;
 			break;
+		}
+		break;
+	case LEADER_FOLLOW:
+		if (type == LEADER) {
+			this->_color = Util::gGreen;
+		} else {
+			type = NONE;
+			this->_color = Util::gBlue;
 		}
 		break;
 	default:
@@ -170,7 +184,6 @@ void SocialForcesAgent::reset(const SteerLib::AgentInitialConditions & initialCo
 	{
 		_goalQueue.pop();
 	}
-
 	// iterate over the sequence of goals specified by the initial conditions.
 	for (unsigned int i=0; i<initialConditions.goals.size(); i++) {
 		if (initialConditions.goals[i].goalType == SteerLib::GOAL_TYPE_SEEK_STATIC_TARGET ||
@@ -827,6 +840,16 @@ void SocialForcesAgent::updateAI(float timeStamp, float dt, unsigned int frameNu
 			prefForce += normalize(vec) / 8.0f;
 		}
 		break;
+	case LEADER_FOLLOW:
+		vec = leaderFollow(dt);
+		if (vec.lengthSquared() > 0.0f) {
+			if (type == LEADER) {
+				prefForce += normalize(vec);
+			} else {
+				prefForce = normalize(vec);
+			}
+		}
+		break;
 	default:
 		break;
 	}
@@ -1020,7 +1043,7 @@ void SocialForcesAgent::draw()
 #endif
 }
 
-AIType SocialForcesAgent::getType() {
+/*AIType SocialForcesAgent::getType() {
 	return type;
 }
 
@@ -1062,7 +1085,7 @@ Util::Vector SocialForcesAgent::wallFollow(float dt) {
 
 bool SocialForcesAgent::canMoveForward() {
 	return true;
-}
+}*/
 
 Util::Vector SocialForcesAgent::pursueEvade(float dt) {
 	Util::Vector result = Util::Vector(0.0f, 0.0f, 0.0f);
@@ -1075,13 +1098,12 @@ Util::Vector SocialForcesAgent::pursueEvade(float dt) {
 				dynamic_cast<SteerLib::SpatialDatabaseItemPtr>(this));
 	SocialForcesAgent* agent;
 	for (std::set<SteerLib::SpatialDatabaseItemPtr>::iterator neighbour = _neighbors.begin();  neighbour != _neighbors.end();  neighbour++)
-	// for (int a =0; a < tmp_agents.size(); a++)
 	{
 		if ( (*neighbour)->isAgent() )
 		{
 			agent = (SocialForcesAgent*) dynamic_cast<SteerLib::AgentInterface *>(*neighbour);
 
-			switch (agent->getType()) {
+			switch (agent->type) {
 			case PURSUE:
 				if (type != PURSUE) {
 					/*result += Util::Vector(agent->position().x + agent->velocity().x * dt - position().x, 
@@ -1102,4 +1124,42 @@ Util::Vector SocialForcesAgent::pursueEvade(float dt) {
 		}
 	}
 	return result;
+}
+
+Util::Vector SocialForcesAgent::leaderFollow(float dt) {
+	Util::Vector result = Util::Vector(0.0f, 0.0f, 0.0f);
+	Util::Vector separation = Util::Vector(0.0f, 0.0f, 0.0f);
+	if (type != LEADER) {
+		int neighbors = 0;
+		std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors;
+		getSimulationEngine()->getSpatialDatabase()->getItemsInRange(_neighbors,
+				_position.x-(this->_radius + _SocialForcesParams.sf_query_radius),
+				_position.x+(this->_radius + _SocialForcesParams.sf_query_radius),
+				_position.z-(this->_radius + _SocialForcesParams.sf_query_radius),
+				_position.z+(this->_radius + _SocialForcesParams.sf_query_radius),
+				dynamic_cast<SteerLib::SpatialDatabaseItemPtr>(this));
+		SocialForcesAgent* agent;
+		for (std::set<SteerLib::SpatialDatabaseItemPtr>::iterator neighbour = _neighbors.begin();  neighbour != _neighbors.end();  neighbour++)
+		{
+			if ( (*neighbour)->isAgent() )
+			{
+				agent = (SocialForcesAgent*) dynamic_cast<SteerLib::AgentInterface *>(*neighbour);
+				separation += Util::Vector(agent->position() - position());
+				neighbors++;
+				if (agent->type == LEADER && type != LEADER) {
+					Util::Vector tmp;
+					tmp += Util::Vector(agent->position() - agent->velocity() - position());
+					// Arrival stuff.
+					if (tmp.lengthSquared() > 0.0f) {
+						result = normalize(tmp) * tmp.lengthSquared();
+					}
+				}
+			}
+		}
+		if (neighbors > 0) {
+			separation /= -neighbors;
+			separation = normalize(separation) * 1.5f;
+		}
+	}
+	return result + separation;
 }
