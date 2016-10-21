@@ -29,10 +29,10 @@
 // #define DRAW_COLLISIONS 1
 
 enum AIState {
-	PURSUE_EVADE, DEFAULT
+	PURSUE_EVADE, LEADER_FOLLOW, DEFAULT
 };
 enum AIType {
-	PURSUE, EVADE, NONE
+	PURSUE, EVADE, LEADER, NONE
 };
 class SocialForcesAgent : public SteerLib::AgentInterface
 {
@@ -95,15 +95,15 @@ protected:
 	// Used to store Waypoints between goals
 	// A waypoint is choosen every FURTHEST_LOCAL_TARGET_DISTANCE
 
-	AIType getType();
 	
 private:
 	AIState state;
 	AIType type;
+	MTRand rng;
 	
 	Util::Vector wallFollow(float dt);
 	Util::Vector pursueEvade(float dt);
-
+	Util::Vector leaderFollow(float dt);
 	// bool runLongTermPlanning();
 	// bool reachedCurrentWaypoint();
 	// void updateMidTermPath();
