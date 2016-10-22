@@ -28,6 +28,7 @@ using namespace SteerLib;
 
 SocialForcesAgent::SocialForcesAgent()
 {
+	//state = PURSUE_EVADE;
 	state = LEADER_FOLLOW;
 	
 	// Set the first agent loaded to be the leader if Leader Follow mod activated.
@@ -188,8 +189,7 @@ void SocialForcesAgent::reset(const SteerLib::AgentInitialConditions & initialCo
 	for (unsigned int i=0; i<initialConditions.goals.size(); i++) {
 		if (initialConditions.goals[i].goalType == SteerLib::GOAL_TYPE_SEEK_STATIC_TARGET ||
 				initialConditions.goals[i].goalType == GOAL_TYPE_AXIS_ALIGNED_BOX_GOAL ||
-				initialConditions.goals[i].goalType == GOAL_TYPE_FLEE_DYNAMIC_TARGET ||
-				initialConditions.goals[i].goalType == GOAL_TYPE_SEEK_DYNAMIC_TARGET)
+				initialConditions.goals[i].goalType == GOAL_TYPE_FLEE_STATIC_TARGET)
 		{
 			if (initialConditions.goals[i].targetIsRandom)
 			{
