@@ -190,8 +190,7 @@ void SocialForcesAgent::reset(const SteerLib::AgentInitialConditions & initialCo
 	for (unsigned int i=0; i<initialConditions.goals.size(); i++) {
 		if (initialConditions.goals[i].goalType == SteerLib::GOAL_TYPE_SEEK_STATIC_TARGET ||
 				initialConditions.goals[i].goalType == GOAL_TYPE_AXIS_ALIGNED_BOX_GOAL ||
-				initialConditions.goals[i].goalType == GOAL_TYPE_FLEE_DYNAMIC_TARGET ||
-				initialConditions.goals[i].goalType == GOAL_TYPE_SEEK_DYNAMIC_TARGET)
+				initialConditions.goals[i].goalType == GOAL_TYPE_FLEE_STATIC_TARGET)
 		{
 			if (initialConditions.goals[i].targetIsRandom)
 			{
@@ -1123,13 +1122,15 @@ Util::Vector SocialForcesAgent::pursueEvade(float dt) {
 }
 
 Util::Vector SocialForcesAgent::growingSpiral(float dt) {
-	Util::Vector pos = position() - startPos;
-	float a = 1.57f;
-	if (pos.x != 0.0f) {
-		a = atan(pos.z / pos.x);
+	Util::Point pos = position();// - startPos;
+	float a = atan(pos.z / (pos.x + 0.001f));
+	float r = 8.0f * sqrtf(pos.x * pos.x + pos.z * pos.z) + 1.0f;
+	Util::Vector v;
+	if (pos.x < 0.0f) {
+		v = r * Util::Vector(sin(a), 0.0f, -cos(a));
+	} else {
+		v = r * Util::Vector(-sin(a), 0.0f, cos(a));
 	}
-	float r = sqrtf(pos.x * pos.x + pos.z * pos.z) + 1.0f;
-	Util::Vector v = r * Util::Vector(pos.x * cos(a) - pos.y * sin(a), 0.0f, pos.x * sin(a) + pos.y * cos(a));
 	return v * dt;
 }
 

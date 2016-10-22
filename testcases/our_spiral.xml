@@ -268,14 +268,14 @@
   </agentRegion>-->
 
   <agentRegion>
-    <numAgents>1</numAgents>
+    <numAgents>5</numAgents>
     <regionBounds>
-      <xmin>23</xmin>
-      <xmax>90</xmax>
+      <xmin>-5</xmin>
+      <xmax>5</xmax>
       <ymin>0</ymin>
       <ymax>0</ymax>
-      <zmin>-40</zmin>
-      <zmax>40</zmax>
+      <zmin>-5</zmin>
+      <zmax>5</zmax>
     </regionBounds>
     <initialConditions>
       <direction> <random>true</random> </direction>
