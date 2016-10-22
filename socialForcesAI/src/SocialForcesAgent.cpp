@@ -1129,8 +1129,7 @@ Util::Vector SocialForcesAgent::growingSpiral(float dt) {
 		a = atan(pos.z / pos.x);
 	}
 	float r = sqrtf(pos.x * pos.x + pos.z * pos.z) + 1.0f;
-	Util::Vector v = Util::Vector(r * sin(a), 0.0f, r * cos(a));
-	printf("(%f, %f)\n", sin(a), cos(a));
+	Util::Vector v = r * Util::Vector(pos.x * cos(a) - pos.y * sin(a), 0.0f, pos.x * sin(a) + pos.y * cos(a));
 	return v * dt;
 }
 
