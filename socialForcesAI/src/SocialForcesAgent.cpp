@@ -28,7 +28,7 @@ using namespace SteerLib;
 
 SocialForcesAgent::SocialForcesAgent()
 {
-	state = LEADER_FOLLOW;
+	state = SPIRAL;
 	
 	// Set the first agent loaded to be the leader if Leader Follow mod activated.
 	static bool noLeader = true;
@@ -112,6 +112,7 @@ void SocialForcesAgent::reset(const SteerLib::AgentInitialConditions & initialCo
 	velocity_ = velocity_ * initialConditions.speed;
 */
 	// initialize the agent based on the initial conditions
+	startPos = initialConditions.position;
 	_position = initialConditions.position;
 	_forward = normalize(initialConditions.direction);
 	_radius = initialConditions.radius;
@@ -145,6 +146,7 @@ void SocialForcesAgent::reset(const SteerLib::AgentInitialConditions & initialCo
 		}
 		break;
 	default:
+		type = NONE;
 		if ( initialConditions.colorSet == true )
 		{
 			this->_color = initialConditions.color;
@@ -839,8 +841,11 @@ void SocialForcesAgent::updateAI(float timeStamp, float dt, unsigned int frameNu
 	case PURSUE_EVADE:
 		vec = pursueEvade(dt);
 		if (vec.lengthSquared() > 0.0f) {
-			prefForce += normalize(vec) / 8.0f;
+			prefForce = normalize(vec) / 8.0f;
 		}
+		break;
+	case SPIRAL:
+		prefForce = growingSpiral(dt);
 		break;
 	case LEADER_FOLLOW:
 		vec = leaderFollow(dt);
@@ -1115,6 +1120,18 @@ Util::Vector SocialForcesAgent::pursueEvade(float dt) {
 		}
 	}
 	return result;
+}
+
+Util::Vector SocialForcesAgent::growingSpiral(float dt) {
+	Util::Vector pos = position() - startPos;
+	float a = 1.57f;
+	if (pos.x != 0.0f) {
+		a = atan(pos.z / pos.x);
+	}
+	float r = sqrtf(pos.x * pos.x + pos.z * pos.z) + 1.0f;
+	Util::Vector v = Util::Vector(r * sin(a), 0.0f, r * cos(a));
+	printf("(%f, %f)\n", sin(a), cos(a));
+	return v * dt;
 }
 
 Util::Vector SocialForcesAgent::leaderFollow(float dt) {

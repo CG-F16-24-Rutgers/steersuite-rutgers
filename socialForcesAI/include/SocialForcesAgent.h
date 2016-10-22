@@ -29,7 +29,7 @@
 // #define DRAW_COLLISIONS 1
 
 enum AIState {
-	PURSUE_EVADE, LEADER_FOLLOW, DEFAULT
+	PURSUE_EVADE, SPIRAL, LEADER_FOLLOW, DEFAULT
 };
 enum AIType {
 	PURSUE, EVADE, LEADER, NONE
@@ -99,10 +99,12 @@ protected:
 private:
 	AIState state;
 	AIType type;
+	Util::Point startPos;
 	MTRand rng;
 	
 	Util::Vector wallFollow(float dt);
 	Util::Vector pursueEvade(float dt);
+	Util::Vector growingSpiral(float dt);
 	Util::Vector leaderFollow(float dt);
 	// bool runLongTermPlanning();
 	// bool reachedCurrentWaypoint();
