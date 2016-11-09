@@ -3,6 +3,7 @@
 // See license.txt for complete license.
 //
 
+// this was also changed
 
 #ifndef __STEERLIB_A_STAR_PLANNER_H__
 #define __STEERLIB_A_STAR_PLANNER_H__
