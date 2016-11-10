@@ -110,6 +110,7 @@ namespace SteerLib
 
 	bool AStarPlanner::computePath(std::vector<Util::Point>& agent_path,  Util::Point start, Util::Point goal, SteerLib::SpatialDataBaseInterface * _gSpatialDatabase, bool append_to_path)
 	{
+		std::cout << "OH YES\n";
 		gSpatialDatabase = _gSpatialDatabase;
 
 		std::vector<SteerLib::AStarPlannerNode> closedset;
@@ -130,6 +131,7 @@ namespace SteerLib
 				for (int i = 0; i < came_from.size(); i++) {
 					agent_path.push_back(came_from[i].point);
 				}
+				std::cout << "HAIL " << came_from.size() << " SATAN\n";
 				return true;
 			}
 			
@@ -150,6 +152,7 @@ namespace SteerLib
 			}
 		}
 
+		std::cout << "OH NO\n";
 		return false;
 	}
 }

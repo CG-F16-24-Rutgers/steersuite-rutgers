@@ -37,19 +37,16 @@ namespace SearchAIGlobals
 
 using namespace SearchAIGlobals;
 
-PLUGIN_API SteerLib::ModuleInterface * createModule()
-{
+PLUGIN_API SteerLib::ModuleInterface * createModule() {
 	return new SearchAIModule;
 }
 
-PLUGIN_API void destroyModule( SteerLib::ModuleInterface*  module )
-{
+PLUGIN_API void destroyModule(SteerLib::ModuleInterface*  module) {
 	delete module;
 }
 
 
-void SearchAIModule::init( const SteerLib::OptionDictionary & options, SteerLib::EngineInterface * engineInfo )
-{
+void SearchAIModule::init(const SteerLib::OptionDictionary & options, SteerLib::EngineInterface * engineInfo) {
 	gEngine = engineInfo;
 	gSpatialDatabase = engineInfo->getSpatialDatabase();
 
@@ -62,38 +59,28 @@ void SearchAIModule::init( const SteerLib::OptionDictionary & options, SteerLib:
 	SteerLib::OptionDictionary::const_iterator optionIter;
 	for (optionIter = options.begin(); optionIter != options.end(); ++optionIter) {
 		std::stringstream value((*optionIter).second);
-		if ((*optionIter).first == "")
-		{
+		if ((*optionIter).first == "") {
 			value >> gLongTermPlanningPhaseInterval;
-		}
-		else if ((*optionIter).first == "ailogFileName")
-		{
+		} else if ((*optionIter).first == "ailogFileName") {
 			logFilename = value.str();
 			logStats = true;
-		}
-		else if ((*optionIter).first == "stats")
-		{
+		} else if ((*optionIter).first == "stats") {
 			gShowStats = Util::getBoolFromString(value.str());
-		}
-		else if ((*optionIter).first == "allstats")
-		{
+		} else if ((*optionIter).first == "allstats") {
 			gShowAllStats = Util::getBoolFromString(value.str());
-		}
-		else
-		{
+		} else {
 			// throw Util::GenericException("unrecognized option \"" + Util::toString((*optionIter).first) + "\" given to PPR AI module.");
 		}
 	}
 
-	if( logStats )
-	{
+	if (logStats) {
 
-		_logger = LogManager::getInstance()->createLogger(logFilename,LoggerType::BASIC_WRITE);
+		_logger = LogManager::getInstance()->createLogger(logFilename, LoggerType::BASIC_WRITE);
 
-		_logger->addDataField("number_of_times_executed",DataType::LongLong );
-		_logger->addDataField("total_ticks_accumulated",DataType::LongLong );
-		_logger->addDataField("shortest_execution",DataType::LongLong );
-		_logger->addDataField("longest_execution",DataType::LongLong );
+		_logger->addDataField("number_of_times_executed", DataType::LongLong);
+		_logger->addDataField("total_ticks_accumulated", DataType::LongLong);
+		_logger->addDataField("shortest_execution", DataType::LongLong);
+		_logger->addDataField("longest_execution", DataType::LongLong);
 		_logger->addDataField("fastest_execution", DataType::Float);
 		_logger->addDataField("slowest_execution", DataType::Float);
 		_logger->addDataField("average_time_per_call", DataType::Float);
@@ -103,7 +90,7 @@ void SearchAIModule::init( const SteerLib::OptionDictionary & options, SteerLib:
 		// LETS TRY TO WRITE THE LABELS OF EACH FIELD
 		std::stringstream labelStream;
 		unsigned int i;
-		for (i=0; i < _logger->getNumberOfFields() - 1; i++)
+		for (i = 0; i < _logger->getNumberOfFields() - 1; i++)
 			labelStream << _logger->getFieldName(i) << " ";
 		labelStream << _logger->getFieldName(i);
 
@@ -112,8 +99,7 @@ void SearchAIModule::init( const SteerLib::OptionDictionary & options, SteerLib:
 	}
 }
 
-void SearchAIModule::initializeSimulation()
-{
+void SearchAIModule::initializeSimulation() {
 	//
 	// initialize the performance profilers
 	//
@@ -126,45 +112,38 @@ void SearchAIModule::initializeSimulation()
 	gPhaseProfilers->predictivePhaseProfiler.reset();
 	gPhaseProfilers->reactivePhaseProfiler.reset();
 	gPhaseProfilers->steeringPhaseProfiler.reset();
-	std::cout<<"\ninitialize simulation\n";
+	std::cout << "\ninitialize simulation\n";
 
 }
 
-void SearchAIModule::preprocessSimulation()
-{
+void SearchAIModule::preprocessSimulation() {
 	//Plan only once for now
-	if(!planned_once)
+	if (!planned_once)
 		return;
 	else
 		planned_once = false;
-	std::cout<<"\nPreprocess simulation\n";
+	std::cout << "\nPreprocess simulation\n";
 	std::vector<SteerLib::AgentInterface*> _agents = gEngine->getAgents();
-	for (int i =0; i<_agents.size(); ++i)
-	{
-		std::cout<<"\nAgent :: "<<i<<"/"<<_agents.size()-1;
-		((SearchAgent*)_agents[i])->computePlan();
+	for (int i = 0; i<_agents.size(); ++i) {
+		std::cout << "\nAgent :: " << i << "/" << _agents.size() - 1;
+		((SearchAgent*) _agents[i])->computePlan();
 	}
 }
 
-void SearchAIModule::preprocessFrame(float timeStamp, float dt, unsigned int frameNumber)
-{
+void SearchAIModule::preprocessFrame(float timeStamp, float dt, unsigned int frameNumber) {
 	//TODO does nothing for now
-	if(frameNumber<30)
-	{
+	if (frameNumber<30) {
 
 	}
 }
 
-void SearchAIModule::postprocessFrame(float timeStamp, float dt, unsigned int frameNumber)
-{
+void SearchAIModule::postprocessFrame(float timeStamp, float dt, unsigned int frameNumber) {
 	//TODO does nothing for now
 }
 
-void SearchAIModule::cleanupSimulation()
-{
+void SearchAIModule::cleanupSimulation() {
 
-	if ( logStats )
-	{
+	if (logStats) {
 		LogObject logObject;
 
 		logObject.addLogData(gPhaseProfilers->aiProfiler.getNumTimesExecuted());
@@ -193,17 +172,14 @@ void SearchAIModule::cleanupSimulation()
 	// kdTree_->deleteObstacleTree(kdTree_->obstacleTree_);
 }
 
-void SearchAIModule::finish()
-{
+void SearchAIModule::finish() {
 	// nothing to do here
 }
 
-SteerLib::AgentInterface * SearchAIModule::createAgent()
-{
-	return new SearchAgent; 
+SteerLib::AgentInterface * SearchAIModule::createAgent() {
+	return new SearchAgent;
 }
 
-void SearchAIModule::destroyAgent( SteerLib::AgentInterface * agent )
-{
+void SearchAIModule::destroyAgent(SteerLib::AgentInterface * agent) {
 	delete agent;
 }
