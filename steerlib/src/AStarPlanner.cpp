@@ -72,24 +72,37 @@ namespace SteerLib
 	double AStarPlanner::hCostEst(Util::Point start, Util::Point goal) {
 		int xDiff = start.x - goal.x;
 		int yDiff = start.y - goal.y;
-		double = xDiff * xDiff + yDiff * yDiff;
-		return result;
-	}
-	
-	double dist() {
-		return ;
+		return xDiff * xDiff + yDiff * yDiff;
 	}
 	
 	std::vector<SteerLib::AStarPlannerNode> AStarPlanner::getNeighbors(SteerLib::AStarPlannerNode n) {
 		std::vector<SteerLib::AStarPlannerNode> result;
-		result.push_back(AStarPlannerNode(Util::Point(n.point.x-1, n.point.y-1), DBL_MAX, DBL_MAX, n));
-		result.push_back(AStarPlannerNode(Util::Point(n.point.x-1, n.point.y), DBL_MAX, DBL_MAX, n));
-		result.push_back(AStarPlannerNode(Util::Point(n.point.x-1, n.point.y+1), DBL_MAX, DBL_MAX, n));
-		result.push_back(AStarPlannerNode(Util::Point(n.point.x, n.point.y-1), DBL_MAX, DBL_MAX, n));
-		result.push_back(AStarPlannerNode(Util::Point(n.point.x, n.point.y+1), DBL_MAX, DBL_MAX, n));
-		result.push_back(AStarPlannerNode(Util::Point(n.point.x+1, n.point.y-1), DBL_MAX, DBL_MAX, n));
-		result.push_back(AStarPlannerNode(Util::Point(n.point.x+1, n.point.y), DBL_MAX, DBL_MAX, n));
-		result.push_back(AStarPlannerNode(Util::Point(n.point.x+1, n.point.y+1), DBL_MAX, DBL_MAX, n));
+		Util::Point p(n.point.x - 1, 0.0, n.point.y - 1);
+		SteerLib::AStarPlannerNode node(p, DBL_MAX, DBL_MAX, &n);
+		result.push_back(node);
+		p.y = n.point.y;
+		node.point = p;
+		result.push_back(node);
+		p.y = n.point.y + 1;
+		node.point = p;
+		result.push_back(node);
+		p.x = n.point.x;
+		p.y = n.point.y - 1;
+		node.point = p;
+		result.push_back(node);
+		p.y = n.point.y + 1;
+		node.point = p;
+		result.push_back(node);
+		p.x = n.point.x + 1;
+		p.y = n.point.y - 1;
+		node.point = p;
+		result.push_back(node);
+		p.y = n.point.y;
+		node.point = p;
+		result.push_back(node);
+		p.y = n.point.y + 1;
+		node.point = p;
+		result.push_back(node);
 		return result;
 	}
 
@@ -99,14 +112,14 @@ namespace SteerLib
 
 		std::vector<SteerLib::AStarPlannerNode> closedset;
 		std::vector<SteerLib::AStarPlannerNode> openset;
-		openset.push_back(new AStarPlannerNode(start, DBL_MAX, DBL_MAX, NULL));
+		openset.push_back(SteerLib::AStarPlannerNode(start, DBL_MAX, DBL_MAX, NULL));
 		std::vector<SteerLib::AStarPlannerNode> came_from;
 		
 		while (openset.size() > 0) {
 			double lowestF = openset[0].f;
 			int lowestIndex = 0;
 			for (int i = 1; i < openset.size(); i++) {
-				if (openset[i] < lowestF) {
+				if (openset[i].f < lowestF) {
 					lowestF = openset[i].f;
 				}
 			}
@@ -118,14 +131,15 @@ namespace SteerLib
 				return true;
 			}
 			
-			openset.erase(lowestIndex);
+			openset.erase(openset.begin() + lowestIndex);
 			closedset.push_back(current);
-			std::vector<SteerLib::AStarPlannerNode> neighbors = getNeighbors(current.point);
+			std::vector<SteerLib::AStarPlannerNode> neighbors = getNeighbors(current);
 			for (int i = 0; i < neighbors.size(); i++) {
 				if (std::find(closedset.begin(), closedset.end(), neighbors[i]) != closedset.end()) {
 					double tempG = current.g + distanceBetween(current.point, neighbors[i].point);
 					if (tempG < neighbors[i].g) {
-						came_from.push_back(AStarPlannerNode(neighbors[i], tempG, tempG + hCostEst(neightbors[i].point, goal), current));
+						SteerLib::AStarPlannerNode node(neighbors[i].point, tempG, tempG + hCostEst(neighbors[i].point, goal), &current);
+						came_from.push_back(node);
 						if (std::find(openset.begin(), openset.end(), neighbors[i]) == openset.end()) {
 							openset.push_back(neighbors[i]);
 						}
