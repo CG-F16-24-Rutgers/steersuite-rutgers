@@ -26,7 +26,9 @@
 
 namespace SteerLib
 {
-	AStarPlanner::AStarPlanner(){}
+	AStarPlanner::AStarPlanner(){
+		std::cout << "\ncreated";
+	}
 
 	AStarPlanner::~AStarPlanner(){}
 
