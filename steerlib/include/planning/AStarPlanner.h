@@ -101,9 +101,9 @@ namespace SteerLib
 			SteerLib::SpatialDataBaseInterface * gSpatialDatabase;
 			double hCostEst(Util::Point start, Util::Point goal);
 			std::vector<SteerLib::AStarPlannerNode> getNeighbors(SteerLib::AStarPlannerNode n);
+			bool computeAStar(std::vector<Util::Point>& agent_path, Util::Point start, Util::Point goal, SteerLib::SpatialDataBaseInterface * gSpatialDatabase, bool append_to_path = false);
+			bool reconstructPath(std::vector<Util::Point>& agent_path, SteerLib::AStarPlannerNode current, std::map<SteerLib::AStarPlannerNode, AStarPlannerNode> came_from, Util::Point start);
 	};
-
-
 }
 
 
