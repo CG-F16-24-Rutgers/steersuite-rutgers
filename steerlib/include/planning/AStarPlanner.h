@@ -3,8 +3,6 @@
 // See license.txt for complete license.
 //
 
-// this was also changed
-
 #ifndef __STEERLIB_A_STAR_PLANNER_H__
 #define __STEERLIB_A_STAR_PLANNER_H__
 
@@ -100,7 +98,7 @@ namespace SteerLib
 		private:
 			SteerLib::SpatialDataBaseInterface * gSpatialDatabase;
 			double hCostEst(Util::Point start, Util::Point goal);
-			std::vector<SteerLib::AStarPlannerNode> getNeighbors(SteerLib::AStarPlannerNode n);
+			std::vector<SteerLib::AStarPlannerNode> getNeighbors(SteerLib::AStarPlannerNode n, std::map<SteerLib::AStarPlannerNode, double>& g_score, std::map<SteerLib::AStarPlannerNode, double>& f_score);
 			bool computeAStar(std::vector<Util::Point>& agent_path, Util::Point start, Util::Point goal, SteerLib::SpatialDataBaseInterface * gSpatialDatabase, bool append_to_path = false);
 			bool reconstructPath(std::vector<Util::Point>& agent_path, SteerLib::AStarPlannerNode current, std::map<SteerLib::AStarPlannerNode, AStarPlannerNode> came_from, Util::Point start);
 	};

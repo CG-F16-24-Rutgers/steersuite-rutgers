@@ -3,8 +3,6 @@
 // See license.txt for complete license.
 //
 
-// something was changed
-
 #include <vector>
 #include <stack>
 #include <set>
@@ -18,6 +16,7 @@
 #include "planning/AStarPlanner.h"
 
 
+#define WEIGHT 2
 #define COLLISION_COST  1000
 #define GRID_STEP  1
 #define OBSTACLE_CLEARANCE 1
@@ -32,32 +31,29 @@ namespace SteerLib
 
 	AStarPlanner::~AStarPlanner(){}
 
-	bool AStarPlanner::canBeTraversed ( int id ) 
-	{
+	bool AStarPlanner::canBeTraversed(int id) {
 		double traversal_cost = 0;
 		int current_id = id;
-		unsigned int x,z;
+		unsigned int x, z;
 		gSpatialDatabase->getGridCoordinatesFromIndex(current_id, x, z);
 		int x_range_min, x_range_max, z_range_min, z_range_max;
 
-		x_range_min = MAX(x-OBSTACLE_CLEARANCE, 0);
-		x_range_max = MIN(x+OBSTACLE_CLEARANCE, gSpatialDatabase->getNumCellsX());
+		x_range_min = MAX(x - OBSTACLE_CLEARANCE, 0);
+		x_range_max = MIN(x + OBSTACLE_CLEARANCE, gSpatialDatabase->getNumCellsX());
 
-		z_range_min = MAX(z-OBSTACLE_CLEARANCE, 0);
-		z_range_max = MIN(z+OBSTACLE_CLEARANCE, gSpatialDatabase->getNumCellsZ());
+		z_range_min = MAX(z - OBSTACLE_CLEARANCE, 0);
+		z_range_max = MIN(z + OBSTACLE_CLEARANCE, gSpatialDatabase->getNumCellsZ());
 
 
-		for (int i = x_range_min; i<=x_range_max; i+=GRID_STEP)
-		{
-			for (int j = z_range_min; j<=z_range_max; j+=GRID_STEP)
-			{
-				int index = gSpatialDatabase->getCellIndexFromGridCoords( i, j );
-				traversal_cost += gSpatialDatabase->getTraversalCost ( index );
-				
+		for (int i = x_range_min; i <= x_range_max; i += GRID_STEP) {
+			for (int j = z_range_min; j <= z_range_max; j += GRID_STEP) {
+				int index = gSpatialDatabase->getCellIndexFromGridCoords(i, j);
+				traversal_cost += gSpatialDatabase->getTraversalCost(index);
+
 			}
 		}
 
-		if ( traversal_cost > COLLISION_COST ) 
+		if (traversal_cost > COLLISION_COST)
 			return false;
 		return true;
 	}
@@ -81,34 +77,32 @@ namespace SteerLib
 		return xDiff * xDiff + yDiff * yDiff;*/
 	}
 	
-	std::vector<SteerLib::AStarPlannerNode> AStarPlanner::getNeighbors(SteerLib::AStarPlannerNode n) {
-		std::vector<SteerLib::AStarPlannerNode> result;
-		Util::Point p(n.point.x - 1, 0.0, n.point.y - 1);
+	std::vector<SteerLib::AStarPlannerNode> AStarPlanner::getNeighbors(SteerLib::AStarPlannerNode n, std::map<SteerLib::AStarPlannerNode, double>& g_score, std::map<SteerLib::AStarPlannerNode, double>& f_score) {
+		std::vector<SteerLib::AStarPlannerNode> result; 
+		Util::Point p;
+		std::set<SpatialDatabaseItemPtr> neighborList;
 		SteerLib::AStarPlannerNode node(p, DBL_MAX, DBL_MAX, &n);
-		result.push_back(node);
-		p.y = n.point.y;
-		node.point = p;
-		result.push_back(node);
-		p.y = n.point.y + 1;
-		node.point = p;
-		result.push_back(node);
-		p.x = n.point.x;
-		p.y = n.point.y - 1;
-		node.point = p;
-		result.push_back(node);
-		p.y = n.point.y + 1;
-		node.point = p;
-		result.push_back(node);
-		p.x = n.point.x + 1;
-		p.y = n.point.y - 1;
-		node.point = p;
-		result.push_back(node);
-		p.y = n.point.y;
-		node.point = p;
-		result.push_back(node);
-		p.y = n.point.y + 1;
-		node.point = p;
-		result.push_back(node);
+		int minX, maxX, minZ, maxZ;
+		minX = MAX(n.point.x - 1, gSpatialDatabase->getOriginX());
+		maxX = MIN(n.point.x + 1, gSpatialDatabase->getOriginX() + gSpatialDatabase->getNumCellsX());
+		minZ = MAX(n.point.z - 1, gSpatialDatabase->getOriginZ());
+		maxZ = MIN(n.point.z + 1, gSpatialDatabase->getOriginZ() + gSpatialDatabase->getNumCellsZ());
+
+		for (int x = minX; x <= maxX; x++) {
+			for (int z = minZ; z <= maxZ; z++) {
+				if ((x != (int) n.point.x || z != (int) n.point.z)) {
+					if (canBeTraversed(gSpatialDatabase->getCellIndexFromLocation(x, z))) {
+						p.x = x;
+						p.z = z;
+						node.point = p;
+						g_score.emplace(node, node.g);
+						f_score.emplace(node, node.f);
+						result.push_back(node);
+					}
+				}
+			}
+		}
+
 		return result;
 	}
 
@@ -144,7 +138,7 @@ namespace SteerLib
 
 		while (!openset.empty()) {
 			for (int i = 0; i < openset.size(); i++) {
-				if (openset[i].f < lowest_f_value) {
+				if (openset[i].f < lowest_f_value) {	
 					lowest_f_index = i;
 					lowest_f_value = openset[lowest_f_index].f;
 					
@@ -152,6 +146,8 @@ namespace SteerLib
 			}
 
 			SteerLib::AStarPlannerNode current = openset[lowest_f_index];
+
+			//std::cout << "(" << current.point.x << ", " << current.point.z << ")\n";
 
 			if (current.point == goal) {
 				return reconstructPath(agent_path, current, came_from, start);
@@ -161,7 +157,7 @@ namespace SteerLib
 
 			closedset.push_back(current);
 
-			std::vector<SteerLib::AStarPlannerNode> neighbors = getNeighbors(current);
+			std::vector<SteerLib::AStarPlannerNode> neighbors = getNeighbors(current, g_score, f_score);
 
 			for each(SteerLib::AStarPlannerNode neighbor in neighbors) {
 				if (std::find(closedset.begin(), closedset.end(), neighbor) != closedset.end()) {
@@ -170,10 +166,17 @@ namespace SteerLib
 
 				tentative_g_score = g_score.at(current) + distanceBetween(current.point, neighbor.point);
 
-				if (tentative_g_score < g_score.at(neighbor)) {
-					came_from.at(neighbor) = current;
+				//if (tentative_g_score < g_score.at(neighbor)) {
+				if(tentative_g_score < neighbor.g) {
+					//came_from.at(neighbor) = current;
+					came_from.emplace(neighbor, current);
+
 					g_score.at(neighbor) = tentative_g_score;
-					f_score.at(neighbor) = g_score.at(neighbor) + hCostEst(neighbor.point, goal);
+					//g_score.emplace(neighbor, tentative_g_score);
+
+					f_score.at(neighbor) = g_score.at(neighbor) + WEIGHT * hCostEst(neighbor.point, goal);
+					//f_score.emplace(neighbor, g_score.at(neighbor) + hCostEst(neighbor.point, goal));
+
 					if (std::find(openset.begin(), openset.end(), neighbor) == openset.end()) {
 						openset.push_back(neighbor);
 					}
@@ -187,49 +190,6 @@ namespace SteerLib
 	bool AStarPlanner::computePath(std::vector<Util::Point>& agent_path,  Util::Point start, Util::Point goal, SteerLib::SpatialDataBaseInterface * _gSpatialDatabase, bool append_to_path)
 	{
 		gSpatialDatabase = _gSpatialDatabase;
-
-		//return computeAStar(agent_path, start, goal, gSpatialDatabase, append_to_path);
-
-		std::vector<SteerLib::AStarPlannerNode> closedset;
-		std::vector<SteerLib::AStarPlannerNode> openset;
-		openset.push_back(SteerLib::AStarPlannerNode(start, 0.0, hCostEst(start, goal), NULL));
-		std::vector<SteerLib::AStarPlannerNode> came_from;
-		
-		while (!openset.empty()) {
-			double lowestF = openset[0].f;
-			int lowestIndex = 0;
-			for (int i = 1; i < openset.size(); i++) {
-				if (openset[i].f < lowestF) {
-					lowestF = openset[i].f;
-					lowestIndex = i;
-				}
-			}
-			AStarPlannerNode current = openset[lowestIndex];
-			if (current.point == goal) {
-				for (int i = 0; i < came_from.size(); i++) {
-					agent_path.push_back(came_from[i].point);
-				}
-				return true;
-			}
-			
-			openset.erase(openset.begin() + lowestIndex);
-			closedset.push_back(current);
-			std::vector<SteerLib::AStarPlannerNode> neighbors = getNeighbors(current);
-			for (int i = 0; i < neighbors.size(); i++) {
-				if (std::find(closedset.begin(), closedset.end(), neighbors[i]) == closedset.end()) {
-					double tempG = current.g + distanceBetween(current.point, neighbors[i].point);
-					if (tempG < neighbors[i].g) {
-						SteerLib::AStarPlannerNode node(current.point, tempG, tempG + hCostEst(neighbors[i].point, goal), NULL);
-						came_from.push_back(current);
-						if (std::find(openset.begin(), openset.end(), node) == openset.end()) {
-							std::cout << "HAIL SATAN" << "\n";
-							//openset.push_back(node);
-							openset.push_back(neighbors[i]);
-						}
-					}
-				}
-			}
-		}
-		return false;
+		return computeAStar(agent_path, start, goal, gSpatialDatabase, append_to_path);
 	}
 }
