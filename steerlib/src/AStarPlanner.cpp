@@ -79,34 +79,56 @@ namespace SteerLib
 		return xDiff * xDiff + yDiff * yDiff;*/
 	}
 	
-	std::vector<SteerLib::AStarPlannerNode> AStarPlanner::getNeighbors(SteerLib::AStarPlannerNode n) {
+	std::vector<SteerLib::AStarPlannerNode> AStarPlanner::getNeighbors(SteerLib::AStarPlannerNode n, std::map<SteerLib::AStarPlannerNode, double>& g_score, std::map<SteerLib::AStarPlannerNode, double>& f_score) {
 		std::vector<SteerLib::AStarPlannerNode> result;
-		Util::Point p(n.point.x - 1, 0.0, n.point.y - 1);
+			Util::Point p(n.point.x - 1, 0.0, n.point.y - 1);
 		SteerLib::AStarPlannerNode node(p, DBL_MAX, DBL_MAX, &n);
 		result.push_back(node);
+
 		p.y = n.point.y;
 		node.point = p;
+		g_score.emplace(node, node.g);
+		f_score.emplace(node, node.f);
 		result.push_back(node);
+
 		p.y = n.point.y + 1;
 		node.point = p;
+		g_score.emplace(node, node.g);
+		f_score.emplace(node, node.f);
 		result.push_back(node);
+
 		p.x = n.point.x;
 		p.y = n.point.y - 1;
 		node.point = p;
+		g_score.emplace(node, node.g);
+		f_score.emplace(node, node.f);
 		result.push_back(node);
+
 		p.y = n.point.y + 1;
 		node.point = p;
+		g_score.emplace(node, node.g);
+		f_score.emplace(node, node.f);
 		result.push_back(node);
+
 		p.x = n.point.x + 1;
 		p.y = n.point.y - 1;
 		node.point = p;
+		g_score.emplace(node, node.g);
+		f_score.emplace(node, node.f);
 		result.push_back(node);
+
 		p.y = n.point.y;
 		node.point = p;
+		g_score.emplace(node, node.g);
+		f_score.emplace(node, node.f);
 		result.push_back(node);
+
 		p.y = n.point.y + 1;
 		node.point = p;
+		g_score.emplace(node, node.g);
+		f_score.emplace(node, node.f);
 		result.push_back(node);
+
 		return result;
 	}
 
@@ -143,7 +165,7 @@ namespace SteerLib
 
 		while (!openset.empty()) {
 			for (int i = 0; i < openset.size(); i++) {
-				if (openset[i].f < lowest_f_value) {
+				if (openset[i].f < lowest_f_value) {	
 					lowest_f_index = i;
 					lowest_f_value = openset[lowest_f_index].f;
 					
@@ -160,7 +182,7 @@ namespace SteerLib
 
 			closedset.push_back(current);
 
-			std::vector<SteerLib::AStarPlannerNode> neighbors = getNeighbors(current);
+			std::vector<SteerLib::AStarPlannerNode> neighbors = getNeighbors(current, g_score, f_score);
 
 			for each(SteerLib::AStarPlannerNode neighbor in neighbors) {
 				if (std::find(closedset.begin(), closedset.end(), neighbor) != closedset.end()) {
@@ -169,10 +191,17 @@ namespace SteerLib
 
 				tentative_g_score = g_score.at(current) + distanceBetween(current.point, neighbor.point);
 
-				if (tentative_g_score < g_score.at(neighbor)) {
-					came_from.at(neighbor) = current;
+				//if (tentative_g_score < g_score.at(neighbor)) {
+				if(tentative_g_score < neighbor.g) {
+					//came_from.at(neighbor) = current;
+					came_from.emplace(neighbor, current);
+
 					g_score.at(neighbor) = tentative_g_score;
+					//g_score.emplace(neighbor, tentative_g_score);
+
 					f_score.at(neighbor) = g_score.at(neighbor) + hCostEst(neighbor.point, goal);
+					//f_score.emplace(neighbor, g_score.at(neighbor) + hCostEst(neighbor.point, goal));
+
 					if (std::find(openset.begin(), openset.end(), neighbor) == openset.end()) {
 						openset.push_back(neighbor);
 					}
