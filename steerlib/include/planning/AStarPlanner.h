@@ -52,7 +52,16 @@ namespace SteerLib
 		    {
 		        return ((this->point.x == other.point.x) && (this->point.z == other.point.z));
 		    }
-
+			bool operator<=(AStarPlannerNode other) const {
+				if (this->f < other.f)
+					return this->f < other.f;
+				return ((this->point.x == other.point.x) && (this->point.z == other.point.z));
+			}
+			bool operator>=(AStarPlannerNode other) const {
+				if (this->f > other.f)
+					return this->f > other.f;
+				return ((this->point.x == other.point.x) && (this->point.z == other.point.z));
+			}
 	};
 
 	

@@ -91,7 +91,9 @@ namespace SteerLib
 		for (int x = minX; x <= maxX; x++) {
 			for (int z = minZ; z <= maxZ; z++) {
 				if ((x != (int) n.point.x || z != (int) n.point.z)) {
-					if (canBeTraversed(gSpatialDatabase->getCellIndexFromLocation(x, z))) {
+					int index = gSpatialDatabase->getCellIndexFromLocation(x, z);
+					gSpatialDatabase->getLocationFromIndex(index, p);
+					if (canBeTraversed(index)) {
 						p.x = x;
 						p.z = z;
 						node.point = p;
@@ -187,9 +189,93 @@ namespace SteerLib
 		return false;
 	}
 
-	bool AStarPlanner::computePath(std::vector<Util::Point>& agent_path,  Util::Point start, Util::Point goal, SteerLib::SpatialDataBaseInterface * _gSpatialDatabase, bool append_to_path)
-	{
+	bool AStarPlanner::computePath(std::vector<Util::Point>& agent_path,  Util::Point start, Util::Point goal, SteerLib::SpatialDataBaseInterface * _gSpatialDatabase, bool append_to_path) {
 		gSpatialDatabase = _gSpatialDatabase;
-		return computeAStar(agent_path, start, goal, gSpatialDatabase, append_to_path);
+		float offset = 1;
+
+		Util::Point startPoint = start;
+		int startIndex = gSpatialDatabase->getCellIndexFromLocation(start.x, start.z);
+		gSpatialDatabase->getLocationFromIndex(startIndex, startPoint);
+
+		Util::Point goalPoint = goal;
+		int goalIndex = gSpatialDatabase->getCellIndexFromLocation(goal.x, goal.z);
+		gSpatialDatabase->getLocationFromIndex(goalIndex, goalPoint);
+
+		float g = 0;
+
+		//Euclidean
+		float h = (sqrt(pow((goalPoint.x - startPoint.x), 2) + pow((goalPoint.z - startPoint.z), 2)));
+
+		AStarPlannerNode* startNode = new AStarPlannerNode(startPoint, g, g + h, NULL);
+
+		std::vector<AStarPlannerNode*> closedSet;
+		std::vector<AStarPlannerNode*> openSet;
+
+		openSet.push_back(startNode);
+
+		while (!openSet.empty()) {
+			AStarPlannerNode* currentNode = openSet[0];
+			int currentIndex = 0;
+			for (int i = 1; i < openSet.size(); i++) {
+				AStarPlannerNode * tempNode = openSet[i];
+				if (*tempNode <= *currentNode) {
+					currentNode = tempNode;
+					currentIndex = i;
+				}
+			}
+			int currentCellIndex = gSpatialDatabase->getCellIndexFromLocation(currentNode->point.x, currentNode->point.z);
+			if (currentCellIndex == goalIndex) {
+				agent_path.insert(agent_path.begin(), currentNode->point);
+				while (currentNode->parent) {
+					currentNode = currentNode->parent;
+					agent_path.insert(agent_path.begin(), currentNode->point);
+				}
+				return true;
+			}
+			openSet.erase(openSet.begin() + currentIndex);
+			closedSet.push_back(currentNode);
+			for (float x = -offset; x <= offset; x = x + offset) {
+				for (float z = -offset; z <= offset; z = z + offset) {
+					Util::Point currentPoint = currentNode->point;
+					int currentIndex = gSpatialDatabase->getCellIndexFromLocation(currentPoint.x, currentPoint.z);
+					gSpatialDatabase->getLocationFromIndex(currentIndex, currentPoint);
+					Util::Point nextPoint(currentPoint.x + x, 0, currentPoint.z + z);
+					int nextIndex = gSpatialDatabase->getCellIndexFromLocation(nextPoint.x, nextPoint.z);
+					gSpatialDatabase->getLocationFromIndex(nextIndex, nextPoint);
+					if (canBeTraversed(nextIndex)) {
+
+						float dist = 1;
+
+						//normal cases distance calculation
+						g = currentNode->g + dist;
+
+						//Euclidean
+						h = /*w **/ (sqrt(pow((goalPoint.x - nextPoint.x), 2) + pow((goalPoint.z - nextPoint.z), 2)));
+
+						bool skipFlag = false;
+
+						AStarPlannerNode * nextNode = new AStarPlannerNode(nextPoint, g, g + h, currentNode);
+						for (int i = 1; i < closedSet.size(); i++) {
+							if (*closedSet[i] == *nextNode) {
+								skipFlag = true;
+							}
+						}
+						for (int i = 1; i < openSet.size(); i++) {
+							if (*openSet[i] == *nextNode) {
+								//Part 2 with smaller or larger g values for tie breaks
+								if (*nextNode <= *openSet[i]) {
+									openSet[i] = nextNode;
+								}
+								skipFlag = true;
+							}
+						}
+						if (!skipFlag) {
+							openSet.push_back(nextNode);
+						}
+					}
+				}
+			}
+		}
+		return false;
 	}
 }
