@@ -1,0 +1,5 @@
+number_of_times_executed total_ticks_accumulated shortest_execution longest_execution fastest_execution slowest_execution average_time_per_call total_time_of_all_calls tick_frequency
+205422 44995153 168 4515 0.011733 0.315333 0.015298 3.142519 14.318180 
+205422 44995153 168 4515 0.011733 0.315333 0.015298 3.142519 14.318180 
+0 0 0 0 0.000000 0.000000 0.000000 0.000000 14.318180 
+0 0 0 0 0.000000 0.000000 0.000000 0.000000 14.318180 

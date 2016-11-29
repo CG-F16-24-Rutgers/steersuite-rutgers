@@ -1,0 +1,5 @@
+number_of_times_executed total_ticks_accumulated shortest_execution longest_execution fastest_execution slowest_execution average_time_per_call total_time_of_all_calls tick_frequency
+201323 87053883 42 12145 0.002933 0.848222 0.030200 6.079954 14.318180 
+201323 87053883 42 12145 0.002933 0.848222 0.030200 6.079954 14.318180 
+0 0 0 0 0.000000 0.000000 0.000000 0.000000 14.318180 
+0 0 0 0 0.000000 0.000000 0.000000 0.000000 14.318180 

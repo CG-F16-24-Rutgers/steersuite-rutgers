@@ -1,0 +1,5 @@
+number_of_times_executed total_ticks_accumulated shortest_execution longest_execution fastest_execution slowest_execution average_time_per_call total_time_of_all_calls tick_frequency
+212120 162661520 35 43666 0.002444 3.049689 0.053557 11.360489 14.318180 
+212120 162661520 35 43666 0.002444 3.049689 0.053557 11.360489 14.318180 
+0 0 0 0 0.000000 0.000000 0.000000 0.000000 14.318180 
+0 0 0 0 0.000000 0.000000 0.000000 0.000000 14.318180 
