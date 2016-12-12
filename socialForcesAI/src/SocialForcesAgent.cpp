@@ -28,7 +28,7 @@ using namespace SteerLib;
 
 SocialForcesAgent::SocialForcesAgent()
 {
-	state = PURSUE_EVADE;
+	state = QUEUE;
 	
 	// Set the first agent loaded to be the leader if Leader Follow mod activated.
 	static bool noLeader = true;
@@ -63,6 +63,10 @@ SocialForcesAgent::~SocialForcesAgent()
 		// getSimulationEngine()->getSpatialDatabase()->removeObject( this, bounds);
 	}*/
 	// std::cout << "Someone is removing an agent " << std::endl;
+	if (_enabled) {
+		Util::AxisAlignedBox bounds(__position.x - _radius, __position.x + _radius, 0.0f, 0.0f, __position.z - _radius, __position.z + _radius);
+		getSimulationEngine()->getSpatialDatabase()->removeObject(this, bounds);
+	}
 }
 
 SteerLib::EngineInterface * SocialForcesAgent::getSimulationEngine()
@@ -256,6 +260,34 @@ void SocialForcesAgent::reset(const SteerLib::AgentInitialConditions & initialCo
 	assert(_forward.length()!=0.0f);
 	assert(_goalQueue.size() != 0);
 	assert(_radius != 0.0f);
+	computePlan();
+}
+
+
+void SocialForcesAgent::computePlan() {
+	std::cout << "\nComputing agent plan ";
+	if (!_goalQueue.empty()) {
+		Util::Point global_goal = _goalQueue.front().targetLocation;
+		if (astar.computePath(__path, __position, _goalQueue.front().targetLocation, getSimulationEngine()->getSpatialDatabase())) {
+
+			while (!_goalQueue.empty())
+				_goalQueue.pop();
+
+			for (int i = 0; i < __path.size(); ++i) {
+				SteerLib::AgentGoalInfo goal_path_pt;
+				goal_path_pt.targetLocation = __path[i];
+				_goalQueue.push(goal_path_pt);
+			}
+			SteerLib::AgentGoalInfo goal_path_pt;
+			goal_path_pt.targetLocation = global_goal;
+			_goalQueue.push(goal_path_pt);
+		}
+		// else
+		// {
+		// 	for(int i = 0;i<20;++i)
+		// 		_goalQueue.push(_goalQueue.front());
+		// }
+	}
 }
 
 
@@ -856,6 +888,9 @@ void SocialForcesAgent::updateAI(float timeStamp, float dt, unsigned int frameNu
 			}
 		}
 		break;
+	case QUEUE:
+		prefForce = queue(dt);
+		break;
 	default:
 		break;
 	}
@@ -1170,4 +1205,65 @@ Util::Vector SocialForcesAgent::leaderFollow(float dt) {
 		}
 	}
 	return result + separation;
+}
+
+SocialForcesAgent* SocialForcesAgent::getNeighborAhead() {
+	Util::Vector v = normalize(velocity()) * 1.5f;
+	Util::Point qa = Util::Point(v.x, v.y, v.z);
+	std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors;
+	getSimulationEngine()->getSpatialDatabase()->getItemsInRange(_neighbors,
+			_position.x-(this->_radius + _SocialForcesParams.sf_query_radius),
+			_position.x+(this->_radius + _SocialForcesParams.sf_query_radius),
+			_position.z-(this->_radius + _SocialForcesParams.sf_query_radius),
+			_position.z+(this->_radius + _SocialForcesParams.sf_query_radius),
+			dynamic_cast<SteerLib::SpatialDatabaseItemPtr>(this));
+	SocialForcesAgent* agent;
+	for (std::set<SteerLib::SpatialDatabaseItemPtr>::iterator neighbour = _neighbors.begin();  neighbour != _neighbors.end();  neighbour++) {
+		if ((*neighbour)->isAgent()) {
+			agent = (SocialForcesAgent*) dynamic_cast<SteerLib::AgentInterface *>(*neighbour);
+			float d = distanceSquaredBetween(position() + qa, agent->position());
+			if (d < 2.25f) {
+				return agent;
+			}
+		}
+	}
+	return NULL;
+}
+
+Util::Vector SocialForcesAgent::queue(float dt) {
+	Util::Vector brake(0.0f, 0.0f, 0.0f);
+	SocialForcesAgent* neighbor = getNeighborAhead();
+	if (neighbor != NULL) {
+		brake = -velocity() * 0.8f;
+		
+		std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors;
+		getSimulationEngine()->getSpatialDatabase()->getItemsInRange(_neighbors,
+				_position.x-(this->_radius + _SocialForcesParams.sf_query_radius),
+				_position.x+(this->_radius + _SocialForcesParams.sf_query_radius),
+				_position.z-(this->_radius + _SocialForcesParams.sf_query_radius),
+				_position.z+(this->_radius + _SocialForcesParams.sf_query_radius),
+				dynamic_cast<SteerLib::SpatialDatabaseItemPtr>(this));
+		int neighbors = 0;
+		Util::Vector separation(0.0f, 0.0f, 0.0f);
+		SocialForcesAgent* agent;
+		for (std::set<SteerLib::SpatialDatabaseItemPtr>::iterator neighbour = _neighbors.begin();  neighbour != _neighbors.end();  neighbour++)
+		{
+			if ( (*neighbour)->isAgent() )
+			{
+				agent = (SocialForcesAgent*) dynamic_cast<SteerLib::AgentInterface *>(*neighbour);
+				separation += Util::Vector(agent->position() - position());
+				neighbors++;
+			}
+		}
+		if (neighbors > 0) {
+			separation /= -neighbors;
+			separation = normalize(separation) * 1.5f;
+		}
+		brake += separation;
+		
+		if (distanceSquaredBetween(Util::Point(position()), Util::Point(neighbor->position())) < 2.25f) {
+			_velocity *= 0.3f;
+		}
+	}
+	return brake;
 }

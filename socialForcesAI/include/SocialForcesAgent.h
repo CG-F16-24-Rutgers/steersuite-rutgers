@@ -16,6 +16,8 @@
 // #include "SimpleAgent.h"
 // #include "SocialForcesAIModule.h"
 #include "SocialForces_Parameters.h"
+#include "planning/AStarPlanner.h"
+#include "interfaces/SpatialDataBaseInterface.h"
 
 
 /**
@@ -29,7 +31,7 @@
 // #define DRAW_COLLISIONS 1
 
 enum AIState {
-	PURSUE_EVADE, SPIRAL, LEADER_FOLLOW, DEFAULT
+	PURSUE_EVADE, SPIRAL, LEADER_FOLLOW, QUEUE
 };
 enum AIType {
 	PURSUE, EVADE, LEADER, NONE
@@ -102,14 +104,22 @@ private:
 	Util::Point startPos;
 	MTRand rng;
 	
+	bool _enabled;
+	Util::Point __position;
+	std::vector<Util::Point> __path;
+	SteerLib::AStarPlanner astar;
+	
 	Util::Vector wallFollow(float dt);
 	Util::Vector pursueEvade(float dt);
 	Util::Vector growingSpiral(float dt);
 	Util::Vector leaderFollow(float dt);
+	SocialForcesAgent* getNeighborAhead();
+	Util::Vector queue(float dt);
 	// bool runLongTermPlanning();
 	// bool reachedCurrentWaypoint();
 	// void updateMidTermPath();
 	// bool hasLineOfSightTo(Util::Point point);
+	void computePlan();
 
 
 	void calcNextStep(float dt);
