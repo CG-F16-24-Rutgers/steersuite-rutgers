@@ -31,7 +31,7 @@
 // #define DRAW_COLLISIONS 1
 
 enum AIState {
-	PURSUE_EVADE, SPIRAL, LEADER_FOLLOW, QUEUE
+	PURSUE_EVADE, SPIRAL, LEADER_FOLLOW, QUEUE, CROSS, VORTEX, SQUEEZE, HALL
 };
 enum AIType {
 	PURSUE, EVADE, LEADER, NONE
@@ -115,6 +115,7 @@ private:
 	Util::Vector leaderFollow(float dt);
 	SocialForcesAgent* getNeighborAhead();
 	Util::Vector queue(float dt);
+	Util::Vector vortex();
 	// bool runLongTermPlanning();
 	// bool reachedCurrentWaypoint();
 	// void updateMidTermPath();

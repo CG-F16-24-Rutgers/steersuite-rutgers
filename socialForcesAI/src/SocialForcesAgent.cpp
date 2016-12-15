@@ -889,7 +889,66 @@ void SocialForcesAgent::updateAI(float timeStamp, float dt, unsigned int frameNu
 		}
 		break;
 	case QUEUE:
-		prefForce = queue(dt);
+		prefForce += queue(dt);
+		break;
+	case CROSS:
+		if (radius() < 1.0f && abs(position().x) < 128.0f) {
+			if (prefForce.x > -4.0f && prefForce.x < 0.0f) {
+				prefForce.x += 4.0f;
+			}  else if (prefForce.x >= 0.0f && goalDirection.x < 4.0f) {
+				prefForce.x -= 4.0f;
+			} //else {
+			//	if (goalDirection.z > 0.0f) {
+			//		prefForce += Vector((2.0f - position().z) * 0.25f, 0.0f, 0.0f);
+			//	} else {
+			//		prefForce += Vector((-2.0f - position().z) * 0.25f, 0.0f, 0.0f);
+			//	}
+			//}
+		}/* else {
+			prefForce += queue(dt);
+			/*std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors;
+			getSimulationEngine()->getSpatialDatabase()->getItemsInRange(_neighbors,
+					_position.x-(this->_radius + _SocialForcesParams.sf_query_radius),
+					_position.x+(this->_radius + _SocialForcesParams.sf_query_radius),
+					_position.z-(this->_radius + _SocialForcesParams.sf_query_radius),
+					_position.z+(this->_radius + _SocialForcesParams.sf_query_radius),
+					dynamic_cast<SteerLib::SpatialDatabaseItemPtr>(this));
+			int neighbors = 0;
+			Util::Vector separation(0.0f, 0.0f, 0.0f);
+			SocialForcesAgent* agent;
+			for (std::set<SteerLib::SpatialDatabaseItemPtr>::iterator neighbour = _neighbors.begin();  neighbour != _neighbors.end();  neighbour++)
+			{
+				if ( (*neighbour)->isAgent() )
+				{
+					agent = (SocialForcesAgent*) dynamic_cast<SteerLib::AgentInterface *>(*neighbour);
+					separation += Util::Vector(agent->position() - position());
+					if () {
+						prefForce = Vector(0.0f, 0.0f, 0.0f);
+					}
+				}
+			}
+		}*/
+		break;
+	case VORTEX:
+		goalDirection = normalize(_goalQueue.front().targetLocation - position());
+		prefForce = (((goalDirection * PERFERED_SPEED) - velocity()) / (_SocialForcesParams.sf_acceleration/dt));
+		prefForce += vortex() / 16.0f;
+		break;
+	case SQUEEZE:
+		goalDirection = normalize(_goalQueue.back().targetLocation - position());
+		prefForce = (((goalDirection * PERFERED_SPEED) - velocity()) / (_SocialForcesParams.sf_acceleration/dt));
+		if (distanceSquaredBetween(position(), _goalQueue.back().targetLocation) > 8.0f) {
+			prefForce += normalize(rotateInXZPlane(goalDirection, -0.785f)) * distanceSquaredBetween(position(), _goalQueue.back().targetLocation);
+			//prefForce += queue(dt);
+		}
+		break;
+	case HALL:
+		goalDirection = normalize(_goalQueue.back().targetLocation - position());
+		prefForce = (((goalDirection * PERFERED_SPEED) - velocity()) / (_SocialForcesParams.sf_acceleration/dt));
+		if (distanceSquaredBetween(position(), _goalQueue.back().targetLocation) > 16.0f) {
+			prefForce += normalize(rotateInXZPlane(goalDirection, -0.785f)) * 0.1f;
+			prefForce += queue(dt);
+		}
 		break;
 	default:
 		break;
@@ -1222,7 +1281,7 @@ SocialForcesAgent* SocialForcesAgent::getNeighborAhead() {
 		if ((*neighbour)->isAgent()) {
 			agent = (SocialForcesAgent*) dynamic_cast<SteerLib::AgentInterface *>(*neighbour);
 			float d = distanceSquaredBetween(position() + qa, agent->position());
-			if (d < 2.25f) {
+			if (d < 1.21f) {
 				return agent;
 			}
 		}
@@ -1236,7 +1295,7 @@ Util::Vector SocialForcesAgent::queue(float dt) {
 	if (neighbor != NULL) {
 		brake = -velocity() * 0.8f;
 		
-		std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors;
+		/*std::set<SteerLib::SpatialDatabaseItemPtr> _neighbors;
 		getSimulationEngine()->getSpatialDatabase()->getItemsInRange(_neighbors,
 				_position.x-(this->_radius + _SocialForcesParams.sf_query_radius),
 				_position.x+(this->_radius + _SocialForcesParams.sf_query_radius),
@@ -1257,13 +1316,26 @@ Util::Vector SocialForcesAgent::queue(float dt) {
 		}
 		if (neighbors > 0) {
 			separation /= -neighbors;
-			separation = normalize(separation) * 1.5f;
+			separation = normalize(separation) * 1.1f;
 		}
-		brake += separation;
+		brake += separation;*/
 		
-		if (distanceSquaredBetween(Util::Point(position()), Util::Point(neighbor->position())) < 2.25f) {
+		if (distanceSquaredBetween(Util::Point(position()), Util::Point(neighbor->position())) < 1.21f) {
 			_velocity *= 0.3f;
 		}
 	}
 	return brake;
+}
+
+Util::Vector SocialForcesAgent::vortex() {
+	Util::Vector result(0.0f, 0.0f, 10000.0f - distanceSquaredBetween(position(), Util::Point(0.0f, 0.0f, 0.0f)));
+	float angle = 0.0f;
+	if (position().z != 0.0f) {
+		angle = atan(position().x / position().z);
+	}
+	result = rotateInXZPlane(result, angle - 1.57f);
+	if (position().z > 0.0f) {
+		result = -result;
+	}
+	return result / 10000.0f;
 }
